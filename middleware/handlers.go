@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"github.com/imirjar/notimail_service/models"
+	"github.com/streadway/amqp"
 )
 
 
@@ -26,7 +27,6 @@ func SendMails(w http.ResponseWriter, r *http.Request) {
 	//read request
 	var mail models.Mail//создаем переменную с типом данных "структура письма"
 	err := json.NewDecoder(r.Body).Decode(&mail)//декодируем двоичные данные в участок памяти переменной mail
-
 	if err != nil {
 		log.Fatalf("Unable to decode the request body.  %v", err)
 	}
@@ -50,7 +50,6 @@ func SendNotifications(w http.ResponseWriter, r *http.Request) {
 	//read request
 	var notification models.Notification
 	err := json.NewDecoder(r.Body).Decode(&notification)
-
 	if err != nil {
 		log.Fatalf("Unable to decode the request body.  %v", err)
 	}
