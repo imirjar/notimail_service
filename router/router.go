@@ -10,10 +10,8 @@ func Router() *mux.Router {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", middleware.GetStatus).Methods("GET", "OPTIONS")
-	router.HandleFunc("/send_mails", middleware.SendMails).Methods("POST", "OPTIONS")
-	router.HandleFunc("/send_notifications", middleware.SendNotifications).Methods("POST", "OPTIONS")
-	//router.HandleFunc("/send_notifications", middleware.SendNotifications).Methods("POST", "OPTIONS")
+	router.HandleFunc("/status", middleware.GetStatus).Methods("GET")
+	router.HandleFunc("/send_notimails", middleware.SendNotimails).Methods("POST")
 
 
 	return router

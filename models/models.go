@@ -5,14 +5,19 @@ type Response struct {
 }
 
 type Mail struct {
-	To 		[]string 	`json:"to"`
-	Subject string 		`json:"subject"`
-	Message string 		`json:"message"`
+	To 				[]string 		`json:"to"`
+	Subject 		string 			`json:"subject"`
+	Message 		string 			`json:"message"`
 }
 
 
 type Notification struct {
-	To 		[]string 	`json:"to"`
-	Message string 		`json:"message"`
+	To 				[]string 		`json:"to"`
+	Messenger		string			`json:"messenger"`
+	Message 		string 			`json:"message"`
 }
 
+type NotiMail struct {
+	Notifications 	Notification  	`json:"notifications"`
+	Mails 			Mail 			`json:"mails"`
+}

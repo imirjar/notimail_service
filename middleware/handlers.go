@@ -2,13 +2,18 @@ package middleware
 
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"fmt"
 	"log"
 	"github.com/imirjar/notimail_service/models"
-	"github.com/streadway/amqp"
+	"github.com/redis/go-redis/v9"
 )
+
+var ctx = context.Background()
+
+
 
 
 func GetStatus(w http.ResponseWriter, r *http.Request) {
@@ -18,46 +23,50 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 		Message: "Stock created successfully",
 	}
 	// send the response
-	json.NewEncoder(w).Encode(res)
+	json.NewEncoder(w).Encode(res)	
 }
 
 //curl -d '{"to":["user@mail.ru", "client@mail.ru"], "subject":"greeting", "message":"Hello my dear friend!"}' -H "Content-Type: application/json" -X POST http://localhost:8080/send_mails
-func SendMails(w http.ResponseWriter, r *http.Request) {
-
+func SendNotimails(w http.ResponseWriter, r *http.Request) {
 	//read request
-	var mail models.Mail//создаем переменную с типом данных "структура письма"
-	err := json.NewDecoder(r.Body).Decode(&mail)//декодируем двоичные данные в участок памяти переменной mail
-	if err != nil {
-		log.Fatalf("Unable to decode the request body.  %v", err)
-	}
-
-	//to-do
-	for i := 0; i < len(mail.To); i++ {
-		fmt.Printf("%v\n", mail.To[i])
-	}
-
-	//send response
-	res := models.Response{
-		Message: "Mail created successfully",
-	}
-	json.NewEncoder(w).Encode(res)
-}
-
-
-//curl -d '{"to":["123", "345"], "message":"Hello my dear friend!"}' -H "Content-Type: application/json" -X POST http://localhost:8080/send_notifications
-func SendNotifications(w http.ResponseWriter, r *http.Request) {
-
-	//read request
-	var notification models.Notification
-	err := json.NewDecoder(r.Body).Decode(&notification)
+	var notiMail models.NotiMail
+	err := json.NewDecoder(r.Body).Decode(&notiMail)
 	if err != nil {
 		log.Fatalf("Unable to decode the request body.  %v", err)
 	}
 
 	//to-do	
-	for i := 0; i < len(notification.To); i++ {
-		fmt.Printf("%v\n", notification.To[i])
+
+	ctx := context.Background()
+	
+	rdb := redis.NewClient(&redis.Options{
+		Addr:	  "localhost:6379",
+		Password: "", // no password set
+		DB:		  0,  // use default DB
+	})
+
+
+
+
+
+	if len(notiMail.Mails.To) > 0 {
+		redis_task, _ := json.Marshal(notiMail.Mails)
+
+		err := rdb.LPush(ctx, "notimail:mails", redis_task).Err()		
+		if err != nil {
+			panic(err)
+		}
 	}
+
+	if len(notiMail.Notifications.To) > 0 {
+		redis_task, _ := json.Marshal(notiMail.Notifications)
+
+		err := rdb.LPush(ctx, "notimail:notifications", redis_task).Err()
+		if err != nil {
+			panic(err)
+		}
+	}
+	
 
 	//send response
 	res := models.Response{
@@ -65,8 +74,4 @@ func SendNotifications(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(res)
 }
-
-
-
-
 
