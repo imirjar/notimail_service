@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"fmt"
 	"log"
+	// "reflect"
 	"github.com/imirjar/notimail_service/models"
 	"github.com/redis/go-redis/v9"
 )
@@ -37,6 +38,7 @@ func SendNotimails(w http.ResponseWriter, r *http.Request) {
 
 	//to-do	
 
+	//connect to redis db
 	ctx := context.Background()
 	
 	rdb := redis.NewClient(&redis.Options{
@@ -46,9 +48,7 @@ func SendNotimails(w http.ResponseWriter, r *http.Request) {
 	})
 
 
-
-
-
+	//push mails to redis
 	if len(notiMail.Mails.To) > 0 {
 		redis_task, _ := json.Marshal(notiMail.Mails)
 
@@ -58,6 +58,7 @@ func SendNotimails(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//push notifications to redis
 	if len(notiMail.Notifications.To) > 0 {
 		redis_task, _ := json.Marshal(notiMail.Notifications)
 
