@@ -8,14 +8,12 @@ import (
 	"time"
 	"encoding/json"
 	"log"
+	"net/http"
 )
-// Router is exported and used in main.go
-// func Consumer(link <-chan string, done chan<- bool) {
-// 	for b := range link {
-// 		fmt.Println(b)
-// 	}
-// 	done <- true
-// }
+
+var mail 			models.Mail
+var notification 	models.Notification
+
 var ctx = context.Background()
 var rdb = redis.NewClient(&redis.Options{
 		Addr:	  "localhost:6379",
@@ -23,8 +21,9 @@ var rdb = redis.NewClient(&redis.Options{
 		DB:		  0,  // use default DB
 	})
 
-var mail models.Mail
-var notification models.Notification
+var telegramApiToken 	= "6287615637:AAF85vS9MDnFbuayB9R8VeTDFjMn8hcxKiQ"
+//var telegramChatId		= "1939907187"
+var telegramGroupId		= "-688697681"
 
 
 func MailConsumer() {
@@ -37,6 +36,9 @@ func MailConsumer() {
 		} else {
 			//to-do with task
 			json.Unmarshal([]byte(task), &mail)
+
+
+
 			fmt.Printf("notimail:mails %v\n", mail)
 		}
 		
@@ -54,6 +56,15 @@ func NotificationConsumer() {
 			//to-do with task
 			json.Unmarshal([]byte(task), &notification)
 			fmt.Printf("notimail:notification %v\n", notification)
+
+			messengerApiUrl := "https://api.telegram.org/bot"+telegramApiToken+"/sendMessage?chat_id="+telegramGroupId+"&text="+notification.Message
+
+			resp, err := http.Get(messengerApiUrl)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Println(resp)
+			//https://api.telegram.org/bot6287615637:AAF85vS9MDnFbuayB9R8VeTDFjMn8hcxKiQ/sendMessage?chat_id=1939907187&text='%v'
 		}
 	}
 
