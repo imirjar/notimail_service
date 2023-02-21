@@ -1,15 +1,11 @@
 package models
 
-type Response struct {
-	Message string `json:"message,omitempty"`
-}
 
 type Mail struct {
 	To 				[]string 		`json:"to"`
 	Subject 		string 			`json:"subject"`
 	Message 		string 			`json:"message"`
 }
-
 
 type Notification struct {
 	To 				[]string 		`json:"to"`
@@ -18,6 +14,10 @@ type Notification struct {
 }
 
 type NotiMail struct {
-	Notifications 	Notification  	`json:"notifications"`
-	Mails 			Mail 			`json:"mails"`
+	Notification 	Notification  	`json:"notification"`
+	Mail 			Mail 			`json:"mail"`
+}
+
+type Response struct {
+	Message 		string 			`json:"message,omitempty"`
 }

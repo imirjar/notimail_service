@@ -9,49 +9,79 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"github.com/joho/godotenv"
+   	"os"
+   	"net/smtp"
 )
 
-var mail 			models.Mail
-var notification 	models.Notification
 
 var ctx = context.Background()
-var rdb = redis.NewClient(&redis.Options{
-		Addr:	  "localhost:6379",
-		Password: "", // no password set
-		DB:		  0,  // use default DB
-	})
 
-var telegramApiToken 	= "6287615637:AAF85vS9MDnFbuayB9R8VeTDFjMn8hcxKiQ"
-//var telegramChatId		= "1939907187"
-var telegramGroupId		= "-688697681"
 
 
 func MailConsumer() {
-	
+
+	err := godotenv.Load(".env")
+   	if err != nil {
+    	log.Printf("Error while parsing .env file: %v\n", err)
+   	}
+
+   	var rdb = redis.NewClient(&redis.Options{
+		Addr:	  os.Getenv("REDIS_ADDR"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:		 0,
+	})
+
+
+
+	var mail models.Mail
+	auth := smtp.PlainAuth("", os.Getenv("EMAIL_HOST_USER"), os.Getenv("EMAIL_HOST_PASSWORD"), os.Getenv("EMAIL_HOST")) 
+    
+
 	for {
 		task, err := rdb.LPop(ctx, "notimail:mails").Result()
 		if err != nil {
-			log.Printf("%v There are no any tasks in query. I need some sleep...", err)
-			time.Sleep(6000 * time.Millisecond)
+			log.Printf("%v There are no any mails in query. I need some sleep...", err)
+			time.Sleep(360 * time.Second)
 		} else {
 			//to-do with task
 			json.Unmarshal([]byte(task), &mail)
-
-
-
-			fmt.Printf("notimail:mails %v\n", mail)
+			
+			
+			err := smtp.SendMail(os.Getenv("EMAIL_HOST")+":"+os.Getenv("EMAIL_PORT"), auth, os.Getenv("EMAIL_HOST_USER"), mail.To, []byte(mail.Message)) 
+			if err != nil { 
+			    log.Fatal(err) 
+			}
+			
+			fmt.Printf("notimail:mail %v\n", mail)
+			 
 		}
-		
 	}
 }
 
 func NotificationConsumer() {
-	
+	telegramApiToken := "6287615637:AAF85vS9MDnFbuayB9R8VeTDFjMn8hcxKiQ"
+	//var telegramChatId		= "1939907187"
+	telegramGroupId	 := "-688697681"
+
+	err := godotenv.Load(".env")
+   	if err != nil {
+    	log.Printf("Error while parsing .env file: %v\n", err)
+   	}
+
+   	var rdb = redis.NewClient(&redis.Options{
+		Addr:	  os.Getenv("REDIS_ADDR"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:		  0,
+	})
+
+	var notification models.Notification
+
 	for {
 		task, err := rdb.LPop(ctx, "notimail:notifications").Result()
 		if err != nil {
-			log.Printf("%v There are no any tasks in query. I need some sleep...", err)
-			time.Sleep(6000 * time.Millisecond)
+			log.Printf("%v There are no any notifications in query. I need some sleep...", err)
+			time.Sleep(360 * time.Second)
 		} else {
 			//to-do with task
 			json.Unmarshal([]byte(task), &notification)
@@ -67,5 +97,4 @@ func NotificationConsumer() {
 			//https://api.telegram.org/bot6287615637:AAF85vS9MDnFbuayB9R8VeTDFjMn8hcxKiQ/sendMessage?chat_id=1939907187&text='%v'
 		}
 	}
-
 }
